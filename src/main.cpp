@@ -28,6 +28,7 @@ void morseDot();
 void morseDash();
 void morseLetterPulse();
 void morseWordPulse();
+void printCorBiInfo();
 
 // Issue #10
 // 同居させた瞬間心拍が取得できなくなったので原因を探る
@@ -52,6 +53,7 @@ class CorBiServerCallbacks : public BLEServerCallbacks
 
   void onDisconnect(BLEServer *pServer)
   {
+    printCorBiInfo();
     M5.Lcd.println("Disconnected");
     BLEDevice::startAdvertising();
   }
@@ -71,14 +73,7 @@ void setup()
   startService(pServer);
   startAdvertising();
 
-  M5.Lcd.setRotation(3);
-  M5.Lcd.setTextFont(4);
-  M5.Lcd.println("Farewell World");
-  M5.Lcd.println("It's CorBi");
-  M5.Lcd.print("made by ");
-  M5.Lcd.setTextColor(TFT_PURPLE, TFT_BLACK);
-  M5.Lcd.println("kiri-lab");
-  M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+  printCorBiInfo();
   // M5.Lcd.println("IR");
   // M5.Lcd.println("Red");
 
@@ -283,4 +278,18 @@ void morseLetterPulse()
 void morseWordPulse()
 {
   delay(timeUnit * 7);
+}
+
+void printCorBiInfo()
+{
+  M5.Lcd.clear();
+  M5.Lcd.setCursor(0, 0);
+  M5.Lcd.setRotation(3);
+  M5.Lcd.setTextFont(4);
+  M5.Lcd.println("Farewell World");
+  M5.Lcd.println("It's CorBi");
+  M5.Lcd.print("made by ");
+  M5.Lcd.setTextColor(TFT_PURPLE, TFT_BLACK);
+  M5.Lcd.println("kiri-lab");
+  M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
 }
