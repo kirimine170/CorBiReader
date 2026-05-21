@@ -29,6 +29,7 @@ void morseDash();
 void morseLetterPulse();
 void morseWordPulse();
 void printCorBiInfo();
+void printCorBiStatus(const char *status);
 
 // Issue #10
 // 同居させた瞬間心拍が取得できなくなったので原因を探る
@@ -47,14 +48,13 @@ class CorBiServerCallbacks : public BLEServerCallbacks
 {
   void onConnect(BLEServer *pServer)
   {
-    M5.Lcd.println("Connected");
+    printCorBiStatus("Connected");
     BLEDevice::stopAdvertising();
   }
 
   void onDisconnect(BLEServer *pServer)
   {
-    printCorBiInfo();
-    M5.Lcd.println("Disconnected");
+    printCorBiStatus("Disconnected");
     BLEDevice::startAdvertising();
   }
 };
@@ -73,7 +73,7 @@ void setup()
   startService(pServer);
   startAdvertising();
 
-  printCorBiInfo();
+  printCorBiStatus("Advertising");
   // M5.Lcd.println("IR");
   // M5.Lcd.println("Red");
 
@@ -292,4 +292,10 @@ void printCorBiInfo()
   M5.Lcd.setTextColor(TFT_PURPLE, TFT_BLACK);
   M5.Lcd.println("kiri-lab");
   M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+}
+
+void printCorBiStatus(const char *status)
+{
+  printCorBiInfo();
+  M5.Lcd.println(status);
 }
