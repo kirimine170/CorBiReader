@@ -43,6 +43,7 @@ uint32_t tsLastReport = 0;
 BLECharacteristic *pCharaIR;
 BLECharacteristic *pCharaRed;
 BLECharacteristic *pCharaOrder;
+SemaphoreHandle_t max30100Mutex;
 
 class CorBiServerCallbacks : public BLEServerCallbacks
 {
@@ -91,14 +92,14 @@ void setup()
   MAX30100.setLedsPulseWidth(PULSE_WIDTH);
   MAX30100.setSamplingRate(SAMPLING_RATE);
   MAX30100.setHighresModeEnabled(HIGHRES_MODE);
+  max30100Mutex = xSemaphoreCreateMutex();
   // xTaskCreatePinnedToCore(morseLED, "morseTask", 4096, NULL, 1, NULL, 1);
-  // xTaskCreatePinnedToCore(pulseOximeter, "MAX30100", 4096, NULL, 2, NULL, 1);
+  xTaskCreatePinnedToCore(pulseOximeter, "MAX30100", 4096, NULL, 2, NULL, 1);
   pinMode(19, OUTPUT);
 }
 
 void loop()
 {
-  MAX30100.update();
   uint16_t ir, red;
   static int data_count = 0;
   static std::string irStr = "";
@@ -108,7 +109,17 @@ void loop()
     // M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
     // M5.Lcd.setCursor(40, 80);
     // float hr = pox.getHeartRate();
-    MAX30100.getRawValues(&ir, &red);
+    bool hasRawValues = false;
+    if (max30100Mutex != nullptr && xSemaphoreTake(max30100Mutex, portMAX_DELAY) == pdTRUE)
+    {
+      hasRawValues = MAX30100.getRawValues(&ir, &red);
+      xSemaphoreGive(max30100Mutex);
+    }
+    if (!hasRawValues)
+    {
+      tsLastReport = millis();
+      return;
+    }
     // M5.Lcd.print(ir);
 
     // M5.Lcd.setCursor(50, 110);
@@ -136,6 +147,15 @@ void loop()
 
 void pulseOximeter(void *arg)
 {
+  for (;;)
+  {
+    if (max30100Mutex != nullptr && xSemaphoreTake(max30100Mutex, portMAX_DELAY) == pdTRUE)
+    {
+      MAX30100.update();
+      xSemaphoreGive(max30100Mutex);
+    }
+    delay(1);
+  }
 }
 
 // FIXME いいからプロトタイピングだ！してるので、規格違反してたら後から直してください
